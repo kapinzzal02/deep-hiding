@@ -36,7 +36,6 @@ class MainAppWindow(QMainWindow):
         self.dec_display_label = None
         self.download_dec_button = None
         self.dec_img_text_label = None
-        self.enc_img_text_label = None
         self.key_text_box = None
         self.blowfish_radio = None
         self.aes_radio = None
@@ -57,6 +56,12 @@ class MainAppWindow(QMainWindow):
         self.image_label = None
         self.low_res_image_filepath = None
         self.download_HR_button = None
+        # Add variables for the new radio buttons
+        self.cnn_radio_hide = None
+        self.steganogan_radio_hide = None
+        self.cnn_radio_reveal = None
+        self.steganogan_radio_reveal = None
+
 
         # Set window properties
         self.setWindowTitle("Deep Hiding")
@@ -345,17 +350,42 @@ class MainAppWindow(QMainWindow):
         self.main_layout.addWidget(button_layout_widget)
 
     def show_image_hiding_page(self):
-        self.main_content.set_background_image("assets/components_backgrounds/main_window_bg.png")
+        self.main_content.set_background_image("components_backgrounds/main_window_bg.png") # Use get_asset_path
         self.secret_image_filepath = None
         self.cover_image_filepath = None
         # Clear the main window layout
         self.clear_main_layout()
 
         # Add content to the super resolution page
-        title_label = QLabel("<H2>Image Hiding using CNN</H2>")
+        title_label = QLabel("<H2>Image Hiding</H2>") # Simplified title
         title_label.setStyleSheet("font-size: 24px; color: #ffffff;")
         title_label.setAlignment(Qt.AlignTop)
         self.main_layout.addWidget(title_label)
+
+        # --- Add Model Selection Radio Buttons ---
+        model_selection_layout = QHBoxLayout()
+        model_label = QLabel("Select Model:")
+        model_label.setStyleSheet("font-size: 16px; color: #c6c6c6; font-weight: bold;")
+        self.cnn_radio_hide = QRadioButton("CNN")
+        self.cnn_radio_hide.setToolTip("Use Convolutional Neural Network model for hiding.")
+        self.cnn_radio_hide.setChecked(True) # Default selection
+        self.steganogan_radio_hide = QRadioButton("SteganoGAN (Dense)") # Changed text here
+        self.steganogan_radio_hide.setToolTip("Use SteganoGAN model for hiding.")
+
+        model_group_hide = QButtonGroup(self) # Pass parent to avoid early garbage collection
+        model_group_hide.addButton(self.cnn_radio_hide)
+        model_group_hide.addButton(self.steganogan_radio_hide)
+
+        model_selection_layout.addWidget(model_label)
+        model_selection_layout.addWidget(self.cnn_radio_hide)
+        model_selection_layout.addWidget(self.steganogan_radio_hide)
+        model_selection_layout.addStretch() # Push buttons to the left
+
+        model_selection_widget = QWidget()
+        model_selection_widget.setLayout(model_selection_layout)
+        self.main_layout.addWidget(model_selection_widget)
+        # --- End Model Selection ---
+
 
         # label layout
         label_layout = QHBoxLayout()
@@ -382,19 +412,19 @@ class MainAppWindow(QMainWindow):
         image_display_layout = QHBoxLayout()
         self.cover_display_label = QLabel()
         self.cover_display_label.setAlignment(Qt.AlignCenter)
-        pixmap = QPixmap("assets/dummy_images/cover_image_dummy.png")
+        pixmap = QPixmap(get_asset_path("dummy_images/cover_image_dummy.png")) # Use get_asset_path
         self.cover_display_label.setPixmap(pixmap.scaled(256, 256, Qt.KeepAspectRatio))
         image_display_layout.addWidget(self.cover_display_label)
 
         self.secret_display_label = QLabel()
         self.secret_display_label.setAlignment(Qt.AlignCenter)
-        pixmap = QPixmap("assets/dummy_images/secret_image_dummy.png")
+        pixmap = QPixmap(get_asset_path("dummy_images/secret_image_dummy.png")) # Use get_asset_path
         self.secret_display_label.setPixmap(pixmap.scaled(256, 256, Qt.KeepAspectRatio))
         image_display_layout.addWidget(self.secret_display_label)
 
         self.steg_display_label = QLabel()
         self.steg_display_label.setAlignment(Qt.AlignCenter)
-        pixmap = QPixmap("assets/dummy_images/steg_image_dummy.png")
+        pixmap = QPixmap(get_asset_path("dummy_images/steg_image_dummy.png")) # Use get_asset_path
         self.steg_display_label.setPixmap(pixmap.scaled(256, 256, Qt.KeepAspectRatio))
         image_display_layout.addWidget(self.steg_display_label)
 
@@ -430,14 +460,38 @@ class MainAppWindow(QMainWindow):
         self.main_layout.addWidget(button_layout_widget)
 
     def show_reveal_page(self):
-        self.main_content.set_background_image("assets/components_backgrounds/main_window_bg.png")
+        self.main_content.set_background_image("components_backgrounds/main_window_bg.png") # Use get_asset_path
         self.clear_main_layout()
 
         # Add content to the super resolution page
-        title_label = QLabel("<H2>Image Reveal using CNN</H2>")
+        title_label = QLabel("<H2>Image Reveal</H2>") # Simplified title
         title_label.setStyleSheet("font-size: 24px; color: #ffffff;")
         title_label.setAlignment(Qt.AlignTop)
         self.main_layout.addWidget(title_label)
+
+        # --- Add Model Selection Radio Buttons ---
+        model_selection_layout = QHBoxLayout()
+        model_label = QLabel("Select Model:")
+        model_label.setStyleSheet("font-size: 16px; color: #c6c6c6; font-weight: bold;")
+        self.cnn_radio_reveal = QRadioButton("CNN")
+        self.cnn_radio_reveal.setToolTip("Use Convolutional Neural Network model for revealing.")
+        self.cnn_radio_reveal.setChecked(True) # Default selection
+        self.steganogan_radio_reveal = QRadioButton("SteganoGAN (Dense)") # Changed text here
+        self.steganogan_radio_reveal.setToolTip("Use SteganoGAN model for revealing.")
+
+        model_group_reveal = QButtonGroup(self) # Pass parent
+        model_group_reveal.addButton(self.cnn_radio_reveal)
+        model_group_reveal.addButton(self.steganogan_radio_reveal)
+
+        model_selection_layout.addWidget(model_label)
+        model_selection_layout.addWidget(self.cnn_radio_reveal)
+        model_selection_layout.addWidget(self.steganogan_radio_reveal)
+        model_selection_layout.addStretch() # Push buttons to the left
+
+        model_selection_widget = QWidget()
+        model_selection_widget.setLayout(model_selection_layout)
+        self.main_layout.addWidget(model_selection_widget)
+        # --- End Model Selection ---
 
         # image text layout
         image_text_layout = QHBoxLayout()
@@ -459,13 +513,13 @@ class MainAppWindow(QMainWindow):
         image_layout = QHBoxLayout()
         self.container_display_label = QLabel()
         self.container_display_label.setAlignment(Qt.AlignCenter)
-        pixmap = QPixmap("assets/dummy_images/steg_image_dummy.png")
+        pixmap = QPixmap(get_asset_path("dummy_images/steg_image_dummy.png")) # Use get_asset_path
         self.container_display_label.setPixmap(pixmap.scaled(256, 256, Qt.KeepAspectRatio))
         image_layout.addWidget(self.container_display_label)
         
         self.secret_out_display_label = QLabel()
         self.secret_out_display_label.setAlignment(Qt.AlignCenter)
-        pixmap = QPixmap("assets/dummy_images/secret_image_dummy.png")
+        pixmap = QPixmap(get_asset_path("dummy_images/secret_image_dummy.png")) # Use get_asset_path
         self.secret_out_display_label.setPixmap(pixmap.scaled(256, 256, Qt.KeepAspectRatio))
         image_layout.addWidget(self.secret_out_display_label)
 
@@ -484,7 +538,8 @@ class MainAppWindow(QMainWindow):
         button_layout.addWidget(browse_cover_button)
 
         reveal_button = QPushButton("Reveal")
-        reveal_button.clicked.connect(lambda: self.perform_reveal(self.container_image_filepath))
+        # Corrected the attribute name in the lambda function below
+        reveal_button.clicked.connect(lambda: self.perform_reveal(self.container_image_filepath)) 
         button_layout.addWidget(reveal_button)
 
         self.download_revealed_secret_image_button = QPushButton("Download🔽")
@@ -732,10 +787,32 @@ class MainAppWindow(QMainWindow):
         try:
             steg_image_path = hide_image(cover_filepath, secret_filepath)
             if steg_image_path:
-                pixmap = QPixmap(steg_image_path)
+                # Check which model is selected and resize accordingly
+                if self.steganogan_radio_hide.isChecked():
+                    # Resize to 1024x1024 for SteganoGAN
+                    img = cv2.imread(steg_image_path)
+                    if img is None:
+                        raise Exception(f"Failed to read intermediate image: {steg_image_path}")
+                    resized_img = cv2.resize(img, (1024, 1024), interpolation=cv2.INTER_LANCZOS4) # Changed target size
+                    resized_path = steg_image_path.replace('.png', '_gan.png') 
+                    cv2.imwrite(resized_path, resized_img)
+                    
+                    # Delete the original 224x224 image
+                    try:
+                        os.remove(steg_image_path)
+                    except OSError as e:
+                        print(f"Error deleting intermediate file {steg_image_path}: {e}") # Log error but continue
+
+                    self.current_output_file = resized_path
+                    pixmap = QPixmap(resized_path)
+                else:
+                    # Use original 224x224 for CNN
+                    self.current_output_file = steg_image_path
+                    pixmap = QPixmap(steg_image_path)
+                
+                # Display the image
                 self.steg_display_label.setPixmap(pixmap.scaled(256, 256, Qt.KeepAspectRatio))
                 self.download_steg_button.setEnabled(True)
-                self.current_output_file = steg_image_path
             else:
                 QMessageBox.critical(self, "Hiding Error", "Failed to hide the image.")
         except Exception as e:
@@ -745,13 +822,48 @@ class MainAppWindow(QMainWindow):
         if container_filepath is None:
             QMessageBox.information(self, "Reveal Error", "Please select a stego image first.")
             return
+
+        # --- Updated Warning Check Block ---
+        filename_lower = container_filepath.lower()
+        if self.cnn_radio_reveal.isChecked() and filename_lower.endswith('_gan.png'):
+            QMessageBox.warning(self, "Model Mismatch Warning", 
+                                "You have selected the CNN model, but the chosen image appears to be generated by SteganoGAN (Dense) ('_gan.png').\n\n"
+                                "Revealing might not work correctly. It's recommended to use the SteganoGAN (Dense) model for this image.")
+        elif self.steganogan_radio_reveal.isChecked() and not filename_lower.endswith('_gan.png'): # Added this check
+             QMessageBox.warning(self, "Model Mismatch Warning", 
+                                "You have selected the SteganoGAN (Dense) model, but the chosen image does not have the typical '_gan.png' suffix.\n\n"
+                                "If this image was generated using the CNN model, revealing might not work correctly. It's recommended to use the CNN model for this image.")
+        # --- End Warning Check Block ---
+            
         try:
             secret_out_path = reveal_image(container_filepath)
             if secret_out_path:
-                pixmap = QPixmap(secret_out_path)
+                # Check which model is selected and resize accordingly
+                if self.steganogan_radio_reveal.isChecked():
+                    # Resize to 1024x1024 for SteganoGAN
+                    img = cv2.imread(secret_out_path)
+                    if img is None:
+                         raise Exception(f"Failed to read intermediate image: {secret_out_path}")
+                    resized_img = cv2.resize(img, (1024, 1024), interpolation=cv2.INTER_LANCZOS4) # Changed target size
+                    resized_path = secret_out_path.replace('.png', '_gan.png') 
+                    cv2.imwrite(resized_path, resized_img)
+
+                    # Delete the original 224x224 image
+                    try:
+                        os.remove(secret_out_path)
+                    except OSError as e:
+                        print(f"Error deleting intermediate file {secret_out_path}: {e}") # Log error but continue
+                        
+                    self.current_output_file = resized_path
+                    pixmap = QPixmap(resized_path)
+                else:
+                    # Use original 224x224 for CNN
+                    self.current_output_file = secret_out_path
+                    pixmap = QPixmap(secret_out_path)
+                
+                # Display the image
                 self.secret_out_display_label.setPixmap(pixmap.scaled(256, 256, Qt.KeepAspectRatio))
                 self.download_revealed_secret_image_button.setEnabled(True)
-                self.current_output_file = secret_out_path
             else:
                 QMessageBox.critical(self, "Reveal Error", "Failed to reveal the secret image.")
         except Exception as e:
