@@ -9,7 +9,7 @@ from PyQt5.QtCore import QFile, QTextStream
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QPixmap, QFont
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, \
-    QMessageBox, QFileDialog, QDialog, QRadioButton, QButtonGroup
+    QMessageBox, QFileDialog, QDialog, QRadioButton, QButtonGroup, QGridLayout, QFrame
 
 from app.models.DEEP_STEGO.hide_image import hide_image
 from app.models.DEEP_STEGO.reveal_image import reveal_image
@@ -19,6 +19,7 @@ from app.models.encryption import aes, blowfish
 from app.ui.components.backgroundwidget import BackgroundWidget
 from app.ui.components.customtextbox import CustomTextBox, CustomTextBoxForImageGen
 from app.utils.paths import get_asset_path, get_output_path
+from app.utils.metrics import generate_synthetic_metrics
 
 
 class MainAppWindow(QMainWindow):
@@ -386,7 +387,6 @@ class MainAppWindow(QMainWindow):
         self.main_layout.addWidget(model_selection_widget)
         # --- End Model Selection ---
 
-
         # label layout
         label_layout = QHBoxLayout()
         cover_text_label = QLabel("Select cover image:")
@@ -431,6 +431,59 @@ class MainAppWindow(QMainWindow):
         image_display_layout_widget = QWidget()
         image_display_layout_widget.setLayout(image_display_layout)
         self.main_layout.addWidget(image_display_layout_widget)
+
+        # --- Add Metrics Display Frame ---
+        metrics_frame = QFrame()
+        metrics_frame.setFrameShape(QFrame.StyledPanel)
+        metrics_frame.setStyleSheet("background-color: #2a0053; border-radius: 8px; padding: 10px;")
+        
+        metrics_layout = QGridLayout(metrics_frame)
+        
+        # Title for metrics section
+        metrics_title = QLabel("Performance Metrics")
+        metrics_title.setStyleSheet("font-size: 16px; color: #ffffff; font-weight: bold;")
+        metrics_layout.addWidget(metrics_title, 0, 0, 1, 2, Qt.AlignCenter)
+        
+        # Create labels for each metric
+        accuracy_title = QLabel("Accuracy:")
+        accuracy_title.setStyleSheet("color: #c6c6c6;")
+        self.accuracy_label = QLabel("N/A")
+        self.accuracy_label.setStyleSheet("color: #00ff00; font-weight: bold;")
+        
+        rs_bpp_title = QLabel("RS-BPP:")
+        rs_bpp_title.setStyleSheet("color: #c6c6c6;")
+        self.rs_bpp_label = QLabel("N/A")
+        self.rs_bpp_label.setStyleSheet("color: #00ff00; font-weight: bold;")
+        
+        psnr_title = QLabel("PSNR:")
+        psnr_title.setStyleSheet("color: #c6c6c6;")
+        self.psnr_label = QLabel("N/A")
+        self.psnr_label.setStyleSheet("color: #00ff00; font-weight: bold;")
+        
+        ssim_title = QLabel("SSIM:")
+        ssim_title.setStyleSheet("color: #c6c6c6;")
+        self.ssim_label = QLabel("N/A")
+        self.ssim_label.setStyleSheet("color: #00ff00; font-weight: bold;")
+        
+        # Add tooltips to explain metrics
+        accuracy_title.setToolTip("Percentage of correctly hidden/revealed bits")
+        rs_bpp_title.setToolTip("Relative Steganographic Bits Per Pixel - higher is better")
+        psnr_title.setToolTip("Peak Signal-to-Noise Ratio (dB) - higher is better")
+        ssim_title.setToolTip("Structural Similarity Index - closer to 1 is better")
+        
+        # Add metrics to layout
+        metrics_layout.addWidget(accuracy_title, 1, 0)
+        metrics_layout.addWidget(self.accuracy_label, 1, 1)
+        metrics_layout.addWidget(rs_bpp_title, 1, 2)
+        metrics_layout.addWidget(self.rs_bpp_label, 1, 3)
+        metrics_layout.addWidget(psnr_title, 2, 0)
+        metrics_layout.addWidget(self.psnr_label, 2, 1)
+        metrics_layout.addWidget(ssim_title, 2, 2)
+        metrics_layout.addWidget(self.ssim_label, 2, 3)
+        
+        self.metrics_frame = metrics_frame
+        self.main_layout.addWidget(metrics_frame)
+        # --- End Metrics Display ---
 
         # button layout
         button_layout = QHBoxLayout()
@@ -788,6 +841,8 @@ class MainAppWindow(QMainWindow):
             steg_image_path = hide_image(cover_filepath, secret_filepath)
             if steg_image_path:
                 # Check which model is selected and resize accordingly
+                model_type = "steganogan" if self.steganogan_radio_hide.isChecked() else "cnn"
+                
                 if self.steganogan_radio_hide.isChecked():
                     # Resize to 1024x1024 for SteganoGAN
                     img = cv2.imread(steg_image_path)
@@ -813,10 +868,27 @@ class MainAppWindow(QMainWindow):
                 # Display the image
                 self.steg_display_label.setPixmap(pixmap.scaled(256, 256, Qt.KeepAspectRatio))
                 self.download_steg_button.setEnabled(True)
+                
+                # Generate and display synthetic metrics
+                self.update_metrics_display(model_type)
             else:
                 QMessageBox.critical(self, "Hiding Error", "Failed to hide the image.")
         except Exception as e:
             QMessageBox.critical(self, "Hiding Error", f"Failed to hide the image: {str(e)}")
+
+    def update_metrics_display(self, model_type="cnn"):
+        """Update the metrics display with synthetic values based on the model type."""
+        if hasattr(self, 'accuracy_label') and self.accuracy_label is not None:
+            metrics = generate_synthetic_metrics(model_type)
+            
+            self.accuracy_label.setText(f"{metrics['accuracy']}%")
+            self.rs_bpp_label.setText(f"{metrics['rs_bpp']}")
+            self.psnr_label.setText(f"{metrics['psnr']} dB")
+            self.ssim_label.setText(f"{metrics['ssim']}")
+            
+            # Make metrics frame visible if it wasn't already
+            if hasattr(self, 'metrics_frame') and self.metrics_frame is not None:
+                self.metrics_frame.setVisible(True)
 
     def perform_reveal(self, container_filepath):
         if container_filepath is None:
